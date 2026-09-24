@@ -134,6 +134,17 @@ class ChatData(BaseModel):
     )
     sources: list[ChatSourceOut]
     retrieved: int = Field(description="Chunks scoring above the similarity floor.")
+    closest_similarity: float | None = Field(
+        default=None,
+        description=(
+            "Best similarity any chunk scored before the floor was applied, so a "
+            "refusal can be explained. Null when the search returned no neighbours "
+            "at all, which is a different situation from 'all of them scored low'."
+        ),
+    )
+    min_similarity: float = Field(
+        default=0.0, description="The similarity floor in force for this request."
+    )
     context_chunks: int = Field(description="Chunks actually sent to the model.")
     context_chars: int
     context_truncated: bool = Field(

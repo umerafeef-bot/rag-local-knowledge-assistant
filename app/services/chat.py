@@ -82,6 +82,11 @@ class ChatAnswer:
     sources: tuple[ChatSource, ...]
     #: Chunks retrieved above the similarity floor.
     retrieved: int
+    #: Best similarity the search saw before the floor was applied, so a
+    #: refusal can be explained. ``None`` when the store returned nothing.
+    closest_similarity: float | None
+    #: The similarity floor in force, for the same reason.
+    min_similarity: float
     #: Chunks actually pasted into the prompt (the budget may have cut the tail).
     context_chunks: int
     context_chars: int
@@ -130,18 +135,27 @@ class ChatService:
             )
 
         retrieval_started = time.perf_counter()
-        hits = self._retrieval.search(question, document_ids=document_ids)
+        outcome = self._retrieval.search_detailed(question, document_ids=document_ids)
+        hits = outcome.chunks
         retrieval_seconds = time.perf_counter() - retrieval_started
 
         if not hits:
             # Nothing relevant: refuse here instead of asking the model to
-            # invent an answer from irrelevant context.
-            logger.info("No chunk passed the similarity floor; refusing without calling the model")
+            # invent an answer from irrelevant context. The best score seen is
+            # reported so the client can say how close the library came.
+            logger.info(
+                "No chunk passed the similarity floor (best %.4f < %.2f); "
+                "refusing without calling the model",
+                outcome.best_similarity if outcome.best_similarity is not None else float("nan"),
+                self._retrieval.min_similarity,
+            )
             return ChatAnswer(
                 answer=INSUFFICIENT_CONTEXT_ANSWER,
                 grounded=False,
                 sources=(),
                 retrieved=0,
+                closest_similarity=outcome.best_similarity,
+                min_similarity=self._retrieval.min_similarity,
                 context_chunks=0,
                 context_chars=0,
                 context_truncated=False,
@@ -199,6 +213,8 @@ class ChatService:
             grounded=True,
             sources=sources,
             retrieved=len(hits),
+            closest_similarity=outcome.best_similarity,
+            min_similarity=self._retrieval.min_similarity,
             context_chunks=len(context.used),
             context_chars=context.chars,
             context_truncated=context.truncated,

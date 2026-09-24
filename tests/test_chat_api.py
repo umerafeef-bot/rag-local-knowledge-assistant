@@ -70,6 +70,9 @@ def test_a_grounded_answer_comes_back_with_page_sources(
     assert data["grounded"] is True
     assert data["sources"], "a grounded answer must cite something"
     assert data["retrieved"] >= 1
+    # A grounded answer means something cleared the floor, and the best raw
+    # score is reported as well (it is the same number for the top source).
+    assert data["closest_similarity"] >= data["min_similarity"] > 0
     assert data["context_chunks"] == len(data["sources"])
     assert data["context_chars"] > 0
     assert data["context_truncated"] is False
@@ -159,6 +162,11 @@ def test_an_irrelevant_question_refuses_instead_of_guessing(
     assert data["sources"] == []
     assert data["retrieved"] == 0
     assert data["context_chars"] == 0
+    # The refusal explains itself instead of arriving as a bare "nothing found":
+    # how close the closest match came, and the floor it failed to clear.
+    assert data["closest_similarity"] is not None
+    assert data["closest_similarity"] < data["min_similarity"]
+    assert data["min_similarity"] > 0
     assert data["timings"]["generation_seconds"] == 0.0
     # The key property: the model was never asked, so it cannot hallucinate.
     assert llm.last_prompt is None

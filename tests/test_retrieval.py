@@ -117,6 +117,24 @@ def test_a_strict_floor_turns_unrelated_hits_into_no_hits(settings) -> None:  # 
         assert retrieval(client).search(IRRELEVANT) == []
 
 
+def test_a_refusal_can_still_report_how_close_the_library_came(settings) -> None:  # type: ignore[no-untyped-def]
+    """Dropping every hit must not lose the scores that were dropped.
+
+    The best score seen before the floor is what turns "I found nothing" into
+    "the closest passage scored 0.28 against a floor of 0.30" -- otherwise the
+    caller cannot tell a near miss from a completely empty library.
+    """
+    strict = settings.model_copy(update={"retrieval_min_similarity": 0.99})
+    with build_client(strict) as client:
+        index_document(client)
+
+        outcome = retrieval(client).search_detailed(IRRELEVANT)
+
+    assert outcome.chunks == []
+    assert outcome.best_similarity is not None
+    assert 0.0 <= outcome.best_similarity < 0.99
+
+
 def test_a_filter_restricts_retrieval_to_named_documents(client: TestClient) -> None:
     first = client.post(
         "/documents/upload",

@@ -123,6 +123,9 @@ function renderDocuments() {
   const counter = $("doc-count");
   const scope = $("scope-select");
 
+  // Rebuilding the options must not silently reset the user's scope choice.
+  const previousScope = scope.value;
+
   clear(list);
   clear(scope);
 
@@ -158,6 +161,15 @@ function renderDocuments() {
     option.value = doc.id;
     option.textContent = doc.filename;
     scope.appendChild(option);
+  }
+
+  // Keep the previous choice while its document is still listed (an upload or
+  // a deletion rebuilds this list); otherwise fall back to "All documents".
+  for (const option of scope.options) {
+    if (option.value === previousScope) {
+      scope.value = previousScope;
+      break;
+    }
   }
 }
 
@@ -288,6 +300,15 @@ function addAssistantMessage(data) {
   if (data.grounded) {
     meta.push(`${data.context_chunks} of ${data.retrieved} chunks sent to the model`);
     if (data.context_truncated) meta.push("context was trimmed to fit the budget");
+  } else {
+    // An unexplained refusal reads like a bug. Say how close the library came.
+    const closest = data.closest_similarity;
+    const floor = data.min_similarity;
+    if (typeof closest === "number" && typeof floor === "number") {
+      meta.push(`closest match scored ${closest.toFixed(3)}, under the ${floor.toFixed(2)} floor`);
+    } else {
+      meta.push("the search returned no candidates");
+    }
   }
   meta.push(`retrieval ${(timings.retrieval_seconds || 0).toFixed(3)} s`);
   meta.push(`answer in ${(timings.total_seconds || 0).toFixed(2)} s`);
@@ -327,12 +348,10 @@ async function sendQuestion(question) {
     // anything caught here is a real failure: 409 no documents, 503 Ollama
     // down, 422 validation, network loss.
     loading.remove();
-    if (error.code === "no_documents") {
-      showError(errorBox, error);
-    } else {
-      showError(errorBox, error);
-    }
-    // Echo nothing about the question back; the server message is enough.
+    // 409 no_documents, 503 llm_unavailable, 422 validation: the server's
+    // message is already specific and actionable, so it is shown verbatim.
+    // Nothing about the question is echoed back to the page.
+    showError(errorBox, error);
   } finally {
     state.sending = false;
     $("send").disabled = false;

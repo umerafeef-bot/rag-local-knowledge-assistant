@@ -42,6 +42,19 @@ def test_the_three_assets_are_served(client: TestClient) -> None:
         assert content_type in response.headers["content-type"], path
 
 
+def test_the_ui_assets_must_be_revalidated_not_cached_blindly(client: TestClient) -> None:
+    """An updated app.js must not be shadowed by a browser's stale copy.
+
+    Without Cache-Control the browser is free to reuse a cached asset without
+    asking, so a UI fix can appear to do nothing until a hard refresh.
+    """
+    for path in ("/", "/static/app.js", "/static/styles.css", "/static/index.html"):
+        response = client.get(path)
+
+        assert response.status_code == 200, path
+        assert response.headers.get("cache-control") == "no-cache", path
+
+
 def test_a_missing_asset_uses_the_shared_envelope(client: TestClient) -> None:
     """StaticFiles raises an HTTPException, which the app maps to the envelope.
 

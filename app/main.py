@@ -19,7 +19,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncIterator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -125,6 +125,23 @@ def create_app(
             allow_credentials=False,
         )
         logger.info("CORS enabled for %d configured origin(s)", len(origins))
+
+    @app.middleware("http")
+    async def revalidate_ui_assets(request: Request, call_next):  # type: ignore[no-untyped-def]
+        """Make browsers revalidate the UI instead of reusing a stale copy.
+
+        ``StaticFiles`` sends ``ETag`` and ``Last-Modified`` but no
+        ``Cache-Control``, which lets a browser reuse a cached ``app.js``
+        without asking -- so an updated UI can keep running the old JavaScript
+        until the user happens to hard-refresh. ``no-cache`` means "revalidate
+        before reuse": unchanged files still answer ``304`` and cost nothing,
+        changed ones are fetched immediately.
+        """
+        response = await call_next(request)
+        path = request.url.path
+        if path == "/" or path.startswith("/static/"):
+            response.headers["Cache-Control"] = "no-cache"
+        return response
 
     register_exception_handlers(app)
     app.include_router(health_routes.router)

@@ -64,6 +64,8 @@ def chat(container: ContainerDep, payload: ChatRequest) -> Envelope[ChatData]:
                 for source in result.sources
             ],
             retrieved=result.retrieved,
+            closest_similarity=result.closest_similarity,
+            min_similarity=result.min_similarity,
             context_chunks=result.context_chunks,
             context_chars=result.context_chars,
             context_truncated=result.context_truncated,

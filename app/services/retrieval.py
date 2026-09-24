@@ -44,6 +44,22 @@ class RetrievedChunk:
     text: str
 
 
+@dataclass(frozen=True, slots=True)
+class RetrievalOutcome:
+    """What a search found, plus the best score it saw *before* the floor.
+
+    ``best_similarity`` exists so that a refusal can be explained instead of
+    arriving as an unexplained "I found nothing". On a small or oddly worded
+    corpus, the honest answer to "why did it refuse?" is often "the closest
+    passage scored 0.28 against a floor of 0.30", and the caller cannot work
+    that out from an empty list. ``None`` means the vector store returned no
+    neighbours at all -- a different problem from "they all scored too low".
+    """
+
+    chunks: list[RetrievedChunk]
+    best_similarity: float | None
+
+
 class RetrievalService:
     def __init__(
         self,
@@ -77,7 +93,19 @@ class RetrievalService:
         """Return the relevant chunks for ``question``, best first.
 
         An empty list is a real answer: it means nothing in the library scored
-        above the floor, so the caller must not guess.
+        above the floor, so the caller must not guess. Callers that need to
+        explain *why* it was empty should use :meth:`search_detailed`.
+        """
+        return self.search_detailed(question, document_ids=document_ids, top_k=top_k).chunks
+
+    def search_detailed(
+        self,
+        question: str,
+        *,
+        document_ids: Sequence[str] | None = None,
+        top_k: int | None = None,
+    ) -> RetrievalOutcome:
+        """Like :meth:`search`, but also report the best score seen.
 
         Raises :class:`ValidationError` for a blank question and
         :class:`NotFoundError` when a filter names a document that does not
@@ -129,7 +157,10 @@ class RetrievalService:
             self._min_similarity,
             time.perf_counter() - started,
         )
-        return chunks
+        return RetrievalOutcome(
+            chunks=chunks,
+            best_similarity=max((hit.similarity for hit in hits), default=None),
+        )
 
     def _assert_documents_exist(self, document_ids: Sequence[str]) -> None:
         found = self._documents.get_many(document_ids)
