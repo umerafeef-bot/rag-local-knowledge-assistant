@@ -1,0 +1,58 @@
+# ---------------------------------------------------------------------------
+# Secrets -- never commit real credentials or a populated .env
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+
+# ---------------------------------------------------------------------------
+# Runtime data: uploaded PDFs, the SQLite database, the ChromaDB store and
+# the staging directory. All of it is private user content.
+# ---------------------------------------------------------------------------
+data/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+chroma/
+vectorstore/
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+build/
+dist/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ---------------------------------------------------------------------------
+# Model caches (downloaded once, never committed)
+# ---------------------------------------------------------------------------
+.cache/
+models/
+
+# ---------------------------------------------------------------------------
+# Tooling workspace metadata (not part of the application)
+# ---------------------------------------------------------------------------
+.freebuff/
+
+# ---------------------------------------------------------------------------
+# Editors / OS
+# ---------------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

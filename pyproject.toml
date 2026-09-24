@@ -1,0 +1,17 @@
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+# The default run is fast and fully offline: fake embeddings, a fake LLM.
+#
+#   integration      needs the real sentence-transformers model (~90 MB on first
+#                    run) and the real ChromaDB vector store
+#   integration_llm  additionally needs a running Ollama server with the model
+#                    from OLLAMA_MODEL already pulled
+#
+#     python -m pytest -m integration            # real model, fake LLM
+#     python -m pytest -m integration_llm        # everything, needs Ollama
+addopts = "-m 'not integration and not integration_llm'"
+markers = [
+    "integration: needs the real embedding model (downloads on first run)",
+    "integration_llm: needs a running Ollama server with OLLAMA_MODEL pulled",
+]

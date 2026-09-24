@@ -1,0 +1,32 @@
+# DocuAsk runtime dependencies -- free and open source only.
+#
+# Pinned to the exact versions that were installed and tested on
+# Windows 10 / CPython 3.12 (see the README "Verified stack" table for the
+# licences and the test run that covered them).
+#
+#   Windows PowerShell :  py -3.12 -m venv .venv; .venv\Scripts\python -m pip install -r requirements.txt
+#   Ubuntu / macOS     :  python3.12 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt
+
+# --- Web layer -------------------------------------------------------------
+fastapi==0.141.1
+uvicorn[standard]==0.53.0
+python-multipart==0.0.32
+pydantic==2.13.5
+pydantic-settings==2.15.0
+
+# --- Persistence -----------------------------------------------------------
+sqlalchemy==2.0.54
+
+# --- PDF text extraction ---------------------------------------------------
+pdfplumber==0.11.10
+pypdf==6.19.0
+
+# --- Local embeddings (CPU) ------------------------------------------------
+# sentence-transformers pulls torch, transformers, scipy and scikit-learn.
+sentence-transformers==6.1.0
+
+# --- Local vector store ----------------------------------------------------
+chromadb==1.5.9
+
+# --- HTTP client used to talk to the local Ollama server -------------------
+httpx==0.28.1

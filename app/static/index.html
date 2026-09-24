@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Ask questions about your own PDFs. Extraction, search and the model all run locally.">
+  <title>DocuAsk — ask your own documents</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#question-input">Skip to the question box</a>
+
+  <header class="app-header">
+    <div class="brand">
+      <h1>DocuAsk</h1>
+      <p class="tagline">Ask your PDFs. Everything runs on this machine.</p>
+    </div>
+    <p class="health" id="health" role="status" aria-live="polite">Checking services…</p>
+  </header>
+
+  <main class="layout">
+    <!-- Library: upload + the documents already indexed -->
+    <section class="panel" aria-labelledby="library-heading">
+      <div class="panel-head">
+        <h2 id="library-heading">Documents</h2>
+        <span class="count" id="doc-count" aria-live="polite"></span>
+      </div>
+
+      <form id="upload-form" class="upload" novalidate>
+        <div class="dropzone" id="dropzone">
+          <p class="dropzone-hint">Drag a PDF here, or</p>
+          <label class="file-label" for="file-input">
+            <span class="button-like">Choose a file</span>
+            <input
+              type="file"
+              id="file-input"
+              name="file"
+              accept="application/pdf,.pdf"
+              required
+              aria-describedby="upload-status">
+          </label>
+          <p class="dropzone-name" id="dropzone-name" aria-live="polite"></p>
+        </div>
+        <button type="submit" class="primary" id="upload-submit" disabled>Upload and index</button>
+        <p class="status" id="upload-status" role="status" aria-live="polite"></p>
+      </form>
+
+      <p class="empty" id="library-empty">No documents yet. Upload a PDF to get started.</p>
+      <ul class="doc-list" id="doc-list" aria-labelledby="library-heading" hidden></ul>
+    </section>
+
+    <!-- Chat: the conversation, sources and the input -->
+    <section class="panel chat" aria-labelledby="chat-heading">
+      <div class="panel-head">
+        <h2 id="chat-heading">Ask a question</h2>
+        <button type="button" class="ghost" id="clear-chat" disabled>Clear conversation</button>
+      </div>
+
+      <div class="scope">
+        <label for="scope-select">Search within:</label>
+        <select id="scope-select">
+          <option value="">All documents</option>
+        </select>
+      </div>
+
+      <div
+        class="messages"
+        id="messages"
+        role="log"
+        aria-live="polite"
+        aria-label="Conversation">
+        <p class="empty" id="chat-empty">Answers cite a document, a page and a similarity score.</p>
+      </div>
+
+      <p class="error" id="chat-error" role="alert" hidden></p>
+
+      <form id="chat-form" class="composer">
+        <label class="sr-only" for="question-input">Your question</label>
+        <textarea
+          id="question-input"
+          name="question"
+          rows="2"
+          maxlength="1000"
+          placeholder="Ask a question about your documents…"
+          aria-describedby="chat-hint"></textarea>
+        <div class="composer-side">
+          <button type="submit" class="primary" id="send">Ask</button>
+          <p class="hint" id="chat-hint">Enter to send · Shift+Enter for a new line</p>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>
+      No document text, question or answer leaves this machine.
+      <a href="/docs">API docs</a> · <a href="/health">Service health</a>
+    </p>
+  </footer>
+
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
