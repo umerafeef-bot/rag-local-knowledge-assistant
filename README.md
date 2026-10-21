@@ -737,3 +737,8 @@ appear.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Screenshots
+
+![App screenshot](docs/screenshots/screenshot.png)
+*Placeholder — replace with a real screenshot of the running app.*
